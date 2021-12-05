@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+    <!-- always a good activate OnConsoleStatusListener -->
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+    <!-- 변수 지정 -->
+    <property name="LOG_DIR" value="/logs" />
+    <property name="LOG_PATH_NAME" value="${LOG_DIR}/coffeauth.log"/>
+
+    <!--기본 어펜더들 -->
+    <!-- FILE Appender -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH_NAME}</file>
+        <!-- 일자별로 로그파일 적용하기 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH_NAME}.%d{yyyyMMdd}</fileNamePattern>
+            <maxHistory>60</maxHistory> <!-- 일자별 백업파일의 보관기간 -->
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [coffeauth] [%F] [%M] : %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Console Out-->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern> %d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %magenta(%-4relative) --- [ %boldWhite(%thread{10}) ] %cyan(%logger{20}) : %msg%n</pattern>
+            </layout>
+
+        </encoder>
+    </appender>
+
+
+    <springProfile name= "loglocal">
+        <logger name="com.amazonaws.util.EC2MetadataUtils" level="error"/>
+        <logger name="com.amazonaws.internal.InstanceMetadataServiceResourceFetcher" level="error"/>
+
+        <root level="INFO">
+            <appender-ref ref="FILE" />
+            <appender-ref ref="STDOUT" />
+        </root>
+    </springProfile>
+
+</configuration>

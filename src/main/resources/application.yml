@@ -1,0 +1,164 @@
+spring:
+  profiles:
+    #운영 프로필  : authlocal - 로컬테스트  환경
+    #             authdev   - dev테스트  환경
+    include: authlocal
+    #include: authdev
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  quartz:
+    scheduler-name: coffe-auth-batcher
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+springdoc:
+  api-docs:
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    groups-order: asc
+    tags-sorter: alpha
+    doc-expansion: none
+    operations-sorter: alpha
+  packages-to-scan: com.coffepotato
+
+server:
+  error:
+    whitelabel:
+      enabled: false
+
+---
+spring:
+  profiles:
+    group:
+      authlocal : dbdev,configlocal,loglocal,tomcatlocal,awsdev
+      authdev : dbdev,configdev,loglocal,tomcatreal,awsdev
+
+
+---
+spring :
+  config:
+    activate:
+      on-profile: dbdev
+
+  dbtest:
+    datasource:
+      hikari:
+        jdbc-url: jdbc:mysql://ec2-54-180-114-200.ap-northeast-2.compute.amazonaws.com:3306?&autoReconnect=true&verifyServerCertificate=false&useSSL=false
+        username: coffeboy
+        password: 110356jm!
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        max-lifetime: 1800000
+        connection-timeout: 30000
+        validation-timeout: 5000
+        maximum-pool-size: 60
+
+        data-source-properties:
+          cachePrepStmts: true
+          prepStmtCacheSize: 250
+          prepStmtCacheSqlLimit: 2048
+          useServerPrepStmts: true
+
+---
+spring :
+  config:
+    activate:
+      on-profile: loglocal
+
+---
+spring :
+  config:
+    activate:
+      on-profile: configdev
+
+config:
+  auth:
+    hash-method: SHA256
+  jwtsign:
+    source-pem-path: ./.pem
+    private-pem: private_key.pem
+    public-pem: public_key.pem
+  jwt:
+    #추후 도메인입력.
+    issuer: http://localhost:8030
+    #AccessToken 만료시간 (기본 30분)
+    acc-token-expire: 1800000
+    #RefreshToken 만료시간 (기본 1일)
+    re-token-expire: 86400000
+---
+spring :
+  config:
+    activate:
+      on-profile: configlocal
+
+config:
+  auth:
+    hash-method: SHA256
+  jwtsign:
+    source-pem-path: ./.pem
+    private-pem: private_key.pem
+    public-pem: public_key.pem
+  jwt:
+    issuer: http://localhost:8030
+    #AccessToken 만료시간 (기본 30분)
+    acc-token-expire: 1800000
+    #RefreshToken 만료시간 (기본 1일)
+    re-token-expire: 86400000
+---
+spring :
+  config:
+    activate:
+      on-profile: tomcatlocal
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      prefix: access_log_coffeauth-api
+      pattern: "[%A] [%v] [%{yyyy-MM-dd HH:mm:ss}t]  [%a] [%h] [%S] [accesslog] [%m] [%r] [%{User-Agent}i]"
+  port: 8030
+---
+spring :
+  config:
+    activate:
+      on-profile: tomcatreal
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      prefix: access_log_coffeauth-api
+      pattern: "[%A] [%v] [%{yyyy-MM-dd HH:mm:ss}t]  [%a] [%h] [%S] [accesslog] [%m] [%r] [%{User-Agent}i]"
+  port: 80
+---
+spring :
+  config:
+    activate:
+      on-profile: awsdev
+
+cloud:
+  aws:
+    s3:
+      buckets:
+        - name : keystore
+          path : dev-coffe-auth
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+---
+
+
